@@ -101,9 +101,7 @@ namespace Bonus_optimizer
             }
 
             WriteToTextBoxF1.Text += System.Environment.NewLine;
-            double[] MostCost = new double[2];
-            List<(double Chance, double Bonus)> WinList = new List<(double Chance, double Bonus)>();
-            List<(double Chance, double Bonus)> LossList = new List<(double Chance, double Bonus)>();
+           
             for (int HitsCount = 0; HitsCount <= DataList.Count; HitsCount++)
             {
                 /////////Compute Bonus
