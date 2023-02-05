@@ -174,7 +174,7 @@
             this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.textBox1.Size = new System.Drawing.Size(181, 481);
             this.textBox1.TabIndex = 12;
-            this.textBox1.Text = "005 胜 2\r\n011 胜 3\r\n013 负 3\r\n014 负 4\r\n015 负 4\r\n021 让胜 5\r\n024 平 1.5";
+            this.textBox1.Text = "001 胜 2\r\n002 胜 3\r\n003 负 3\r\n004 负 4\r\n005 负 4\r\n006 让胜 5\r\n007 平 1.5";
             // 
             // Form1
             // 
