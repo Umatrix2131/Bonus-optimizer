@@ -19,38 +19,61 @@ namespace Bonus_optimizer
         public class ComputeClassA
         {
             public string ID;
+            public string Class;
             public string SelecteRes;
-            public double odds;
+            public double Odds;
+            public double Chance;
             public double Times;
         }
         double MaxMoneySet = 1000;
         int RecursionCount = 2;
+        private List<ComputeClassA> GetDataGridViewValues(List<ComputeClassA> TempList)
+        {
+            for (int Y = 0; Y < dataGridView1.RowCount - 1; Y++)
+            {
+                ComputeClassA Temp = new ComputeClassA();
+                Temp.ID = (string)(dataGridView1.Rows[Y].Cells[0].Value);
+                Temp.Class = (string)(dataGridView1.Rows[Y].Cells[1].Value);
+                Temp.SelecteRes = (string)(dataGridView1.Rows[Y].Cells[2].Value); 
+                Temp.Odds = double.Parse((string)(dataGridView1.Rows[Y].Cells[3].Value));
+                TempList.Add(Temp);
+            }
+            return TempList;
+        }
 
         private void Recursion_Multibet(List<ComputeClassA> S_list, ref List<ComputeClassA> Res_List, int MaxRecursion, string Fstr = "", float Money = 1, int Seti = 0, int thisRecursion = 1)
         {
             for (int i = Seti; i < S_list.Count; i++)
             {
+                float odds = (float)S_list[i].Odds * Money;
+
+                string ClassStr = S_list[i].ID + "[" + S_list[i].Class + "]";
+                string SelectedStr = ClassStr + "(" + S_list[i].SelecteRes + ")";
                 if (Fstr.IndexOf(S_list[i].ID) >= 0) continue;
-                float odds = (float)S_list[i].odds * Money;
-                string thisStr = S_list[i].ID + "(" + S_list[i].SelecteRes + ")" + (Fstr == "" ? "" : " x " + Fstr);
+
+                string thisStr = SelectedStr + (Fstr == "" ? "" : " x " + Fstr);
                 if (thisRecursion != MaxRecursion) Recursion_Multibet(S_list, ref Res_List, MaxRecursion, thisStr, odds, i + 1, thisRecursion + 1);
-                else Res_List.Add(new ComputeClassA() { ID = thisStr, odds = odds });
+                else Res_List.Add(new ComputeClassA() { ID = thisStr, Odds = odds });
             }
         }
         private void Recursion_ID(List<ComputeClassA> S_list, ref List<string[]> Res_List, int MaxRecursion, string Fstr = "", float Money = 1, int Seti = 0, int thisRecursion = 1)
         {
             for (int i = Seti; i < S_list.Count; i++)
             {
-                if (Fstr.IndexOf(S_list[i].ID) >= 0) continue;
-                string thisStr = S_list[i].ID + "(" + S_list[i].SelecteRes + ")" + (Fstr == "" ? "" : "#" + Fstr);
+                string ClassStr = S_list[i].ID + "[" + S_list[i].Class + "]";
+                string SelectedStr = ClassStr + "(" + S_list[i].SelecteRes + ")";
+                if (Fstr.IndexOf(ClassStr) >= 0) continue;
+
+                string thisStr = SelectedStr + (Fstr == "" ? "" : "#" + Fstr);
                 if (thisRecursion != MaxRecursion) Recursion_ID(S_list, ref Res_List, MaxRecursion, thisStr, 0, i + 1, thisRecursion + 1);
                 else Res_List.Add(thisStr.Split('#').ToArray());
             }
         }
+
         private void button1_Click(object sender, EventArgs e)
         {
             var WriteToTextBoxF1 = textBox3;
-            string[] str = textBox1.Text.Replace("\r\n", "\r").Replace(" ", "#").Split('\r'); 
+
 
             if (checkBox1.Checked) RecursionCount = 2;
             if (checkBox2.Checked) RecursionCount = 3;
@@ -62,19 +85,12 @@ namespace Bonus_optimizer
 
             List<ComputeClassA> DataList = new List<ComputeClassA>();
             List<ComputeClassA> Res_List = new List<ComputeClassA>();
-            foreach (var a in str)
-            {
-                string[] strTemp = a.Split('#');
-                ComputeClassA Temp = new ComputeClassA();
-                Temp.ID = strTemp.First();
-                Temp.SelecteRes = strTemp[1];
-                Temp.odds = double.Parse(strTemp.Last());
-                DataList.Add(Temp);
-            }
+            DataList = GetDataGridViewValues(DataList);
+
             Recursion_Multibet(DataList, ref Res_List, RecursionCount);
 
-            double Sum = Res_List.Sum(s => 1d / s.odds);
-            for (int i = 0; i < Res_List.Count; i++) Res_List[i].Times = 1d / Res_List[i].odds / Sum;
+            double Sum = Res_List.Sum(s => 1d / s.Odds);
+            for (int i = 0; i < Res_List.Count; i++) Res_List[i].Times = 1d / Res_List[i].Odds / Sum;
 
             for (int i = 0; i < Res_List.Count; i++)
             {
@@ -99,40 +115,39 @@ namespace Bonus_optimizer
 
             foreach (var a in Res_List)
             {
-                WriteToTextBoxF1.Text += (a.ID + " Bonus:" + (a.odds * a.Times * 2d).ToString("f2")) + System.Environment.NewLine;
+                WriteToTextBoxF1.Text += (a.ID + " Bonus:" + (a.Odds * a.Times * 2d).ToString("f2")) + System.Environment.NewLine;
             }
 
+
+
             WriteToTextBoxF1.Text += System.Environment.NewLine;
-            double[] MostCost = new double[2];
-            List<(double Chance, double Bonus)> WinList = new List<(double Chance, double Bonus)>();
-            List<(double Chance, double Bonus)> LossList = new List<(double Chance, double Bonus)>();
-            for (int HitsCount = 0; HitsCount <= DataList.GroupBy(s => s.ID).Count(); HitsCount++)
+            for (int HitsCount = 0; HitsCount <= DataList.Count(); HitsCount++)
             {
                 /////////Compute Bonus
                 double AVGBONUS = 0, COUNTBONUS = 0;
                 List<string[]> AllNameTemp = new List<string[]>();
                 Recursion_ID(DataList, ref AllNameTemp, HitsCount);
 
-
                 foreach (var ANT_Item in AllNameTemp)
                 {
-                    List<string> IDS = new List<string>();
-                    IDS.AddRange(ANT_Item.ToArray());
+                    List<string> IDS = ANT_Item.ToList();
                     double Sums = 0;
                     foreach (var a in Res_List)
                     {
                         int FindStr = 0;
                         for (int j = 0; j < IDS.Count; j++) if (a.ID.IndexOf(IDS[j]) >= 0) FindStr++;
-                        if (FindStr == RecursionCount) Sums += a.odds * a.Times * 2d;
+                        if (FindStr == RecursionCount) Sums += a.Odds * a.Times * 2d;
                     }
                     AVGBONUS += Sums;
-                    COUNTBONUS++;
+                    COUNTBONUS += Sums > 0 ? 1 : 0;
                 }
                 AVGBONUS /= (COUNTBONUS == 0 ? 1d : COUNTBONUS);
 
+
+
                 WriteToTextBoxF1.Text += DataList.Count + " hits " + HitsCount + " Bonus:" + AVGBONUS.ToString("f2") + System.Environment.NewLine;
             }
-             
+
         }
     }
 }
