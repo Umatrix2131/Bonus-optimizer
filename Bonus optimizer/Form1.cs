@@ -32,7 +32,7 @@ namespace Bonus_optimizer
             for (int Y = 0; Y < dataGridView1.RowCount - 1; Y++)
             {
                 ComputeClassA Temp = new ComputeClassA();
-                Temp.ID = (string)(dataGridView1.Rows[Y].Cells[0].Value);
+                Temp.ID = "场次:"+(string)(dataGridView1.Rows[Y].Cells[0].Value);
                 Temp.Class = (string)(dataGridView1.Rows[Y].Cells[1].Value);
                 Temp.SelecteRes = (string)(dataGridView1.Rows[Y].Cells[2].Value); 
                 Temp.Odds = double.Parse((string)(dataGridView1.Rows[Y].Cells[3].Value));
